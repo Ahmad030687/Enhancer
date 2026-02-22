@@ -2,8 +2,6 @@ Flask
 requests
 opencv-python-headless
 gunicorn
-numpy
-basicsr
-realesrgan
 torch --index-url https://download.pytorch.org/whl/cpu
 torchvision --index-url https://download.pytorch.org/whl/cpu
+numpy==1.24.3
