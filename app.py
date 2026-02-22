@@ -5,45 +5,37 @@ import requests
 
 app = Flask(__name__)
 
-# Model Download (EDSR - Best for 4K)
-MODEL_URL = "https://github.com/Saafke/EDSR_Tensorflow/raw/master/models/EDSR_x4.pb"
-MODEL_PATH = "EDSR_x4.pb"
-
-def ensure_model():
-    if not os.path.exists(MODEL_PATH):
-        print("Downloading model... Please wait.")
-        r = requests.get(MODEL_URL)
-        with open(MODEL_PATH, "wb") as f:
-            f.write(r.content)
-        print("Model downloaded!")
-
-ensure_model()
-sr = cv2.dnn_superres.DnnSuperResImpl_create()
-sr.readModel(MODEL_PATH)
-sr.setModel("edsr", 4)
-
 @app.route('/upscale', methods=['GET'])
 def upscale():
     image_url = request.args.get('url')
-    if not image_url: return {"error": "URL missing"}, 400
+    if not image_url: return {"error": "URL do bhai!"}, 400
 
-    img_path = "input.jpg"
-    out_path = "output.png"
+    img_path = "in.jpg"
+    out_path = "out_4k.png"
     
     try:
         # Download
-        r = requests.get(image_url, timeout=15)
+        r = requests.get(image_url, timeout=10)
         with open(img_path, 'wb') as f: f.write(r.content)
 
-        # Read & Process
+        # Image Load
         img = cv2.imread(img_path)
-        # RAM bachanay ke liye agar image bari hai toh optimize karein
         h, w = img.shape[:2]
-        if h > 800 or w > 800:
-            img = cv2.resize(img, (w//2, h//2))
 
-        result = sr.upsample(img)
-        cv2.imwrite(out_path, result)
+        # 4K Calculation (Width 3840 tak le jana)
+        target_width = 3840
+        ratio = target_width / float(w)
+        target_height = int(h * ratio)
+
+        # Ultra HD Upscaling (Lanczos4 is best alternative to AI)
+        result = cv2.resize(img, (target_width, target_height), interpolation=cv2.INTER_LANCZOS4)
+        
+        # Details Sharpness (Heavy factor)
+        # Isse image AI enhancer jaisi crisp ho jati hai
+        gaussian = cv2.GaussianBlur(result, (0, 0), 3)
+        result = cv2.addWeighted(result, 1.5, gaussian, -0.5, 0)
+
+        cv2.imwrite(out_path, result, [cv2.IMWRITE_PNG_COMPRESSION, 9])
         
         return send_file(out_path, mimetype='image/png')
     except Exception as e:
