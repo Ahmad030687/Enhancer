@@ -1,0 +1,9 @@
+flask
+requests
+opencv-python
+torch
+torchvision
+numpy
+basicsr
+realesrgan
+gdown
