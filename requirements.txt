@@ -1,5 +1,4 @@
 Flask
 requests
-opencv-python-headless
 gunicorn
 numpy<2.0.0
