@@ -7,3 +7,4 @@ numpy
 basicsr
 realesrgan
 gdown
+gunicorn
